@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  ohlcv-collector:
+    build: .
+    container_name: ohlcv-collector
+    volumes:
+      - ./ohlc_data:/app/ohlc_data
+      - ./logs:/app/logs
+    environment:
+      - TZ=UTC
+    restart: unless-stopped
+    command: python ohlcv_collector.py
+
+  monitor:
+    build: .
+    container_name: ohlcv-monitor
+    volumes:
+      - ./ohlc_data:/app/ohlc_data
+      - ./logs:/app/logs
+    environment:
+      - TZ=UTC
+    command: python monitor_script.py
+    depends_on:
+      - ohlcv-collector
+
+  validator:
+    build: .
+    container_name: ohlcv-validator
+    volumes:
+      - ./ohlc_data:/app/ohlc_data
+      - ./logs:/app/logs
+    environment:
+      - TZ=UTC
+    command: python data_validator.py
+    depends_on:
+      - ohlcv-collector
+
+  alert-check:
+    build: .
+    container_name: ohlcv-alert-check
+    volumes:
+      - ./ohlc_data:/app/ohlc_data
+      - ./logs:/app/logs
+    environment:
+      - TZ=UTC
+    command: python alert_check.py
+    depends_on:
+      - ohlcv-collector 
