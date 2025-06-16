@@ -13,7 +13,7 @@ import asyncio
 import pandas as pd
 import yfinance as yf
 import holidays
-# import aiohttp
+import aiohttp
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Tuple, Optional, Set
 from pathlib import Path
@@ -31,17 +31,17 @@ DATA_DIR = "ohlc_data"
 STATUS_FILE = "status.json"
 ERROR_LOG = "errors.log"
 MAIN_LOG = "collector.log"
-# NEWS_FILE = "news_events.csv"
+NEWS_FILE = "news_events.csv"
 
 # Try to import custom config
-# try:
-#     from config import TE_API_KEY as CUSTOM_TE_API_KEY
-#     TE_API_KEY = CUSTOM_TE_API_KEY
-# except ImportError:
-#     # If no config file, disable news fetching
-#     TE_API_KEY = None
+try:
+    from config import TE_API_KEY as CUSTOM_TE_API_KEY
+    TE_API_KEY = CUSTOM_TE_API_KEY
+except ImportError:
+    # If no config file, disable news fetching
+    TE_API_KEY = None
 
-# TE_API_URL = "https://api.tradingeconomics.com/calendar"
+TE_API_URL = "https://api.tradingeconomics.com/calendar"
 
 # Holiday calendars
 HOLIDAY_CALENDARS = {
@@ -102,22 +102,22 @@ class OHLCVCollector:
         self.symbols = self._generate_symbols()
         self.status = self._load_status()
         self.running = True
-        # self.news_last_fetch = None
-        # self.session = None
-        # self._ensure_news_file()
+        self.news_last_fetch = None
+        self.session = None
+        self._ensure_news_file()
         
-        # if not TE_API_KEY or TE_API_KEY == "your_api_key_here":
-        #     logger.warning("Trading Economics API key not configured. News fetching will be disabled.")
-        #     logger.warning("Get a free key from https://developer.tradingeconomics.com for full news coverage.")
-        #     self.news_enabled = False
-        # else:
-        #     self.news_enabled = True
+        if not TE_API_KEY or TE_API_KEY == "your_api_key_here":
+            logger.warning("Trading Economics API key not configured. News fetching will be disabled.")
+            logger.warning("Get a free key from https://developer.tradingeconomics.com for full news coverage.")
+            self.news_enabled = False
+        else:
+            self.news_enabled = True
         
-    # def _ensure_news_file(self):
-    #     """Ensure the news events file exists with correct headers"""
-    #     if not os.path.exists(NEWS_FILE):
-    #         pd.DataFrame(columns=['EventTime', 'Country', 'Currency', 'Event', 'Importance', 'DowntimeStart', 'DowntimeEnd']) \
-    #           .to_csv(NEWS_FILE, index=False)
+    def _ensure_news_file(self):
+        """Ensure the news events file exists with correct headers"""
+        if not os.path.exists(NEWS_FILE):
+            pd.DataFrame(columns=['EventTime', 'Country', 'Currency', 'Event', 'Importance', 'DowntimeStart', 'DowntimeEnd']) \
+              .to_csv(NEWS_FILE, index=False)
 
     def _get_symbol_currencies(self, symbol_key: str) -> Set[str]:
         """Extract currencies from a symbol key"""
@@ -156,98 +156,98 @@ class OHLCVCollector:
                     return True
         return False
     
-    # async def _fetch_news_events(self):
-    #     """Fetch high-impact economic events from TradingEconomics"""
-    #     if not self.news_enabled:
-    #         return # Do not fetch news if not enabled
+    async def _fetch_news_events(self):
+        """Fetch high-impact economic events from TradingEconomics"""
+        if not self.news_enabled:
+            return # Do not fetch news if not enabled
             
-    #     try:
-    #         if self.session is None:
-    #             self.session = aiohttp.ClientSession()
+        try:
+            if self.session is None:
+                self.session = aiohttp.ClientSession()
                 
-    #         # Only fetch once per day
-    #         now = datetime.now(timezone.utc)
-    #         if self.news_last_fetch and (now - self.news_last_fetch).total_seconds() < 86400:
-    #             return
-            
-    #         # Append API key to URL
-    #         url = f"{TE_API_URL}?c={TE_API_KEY}"
+            # Only fetch once per day
+            now = datetime.now(timezone.utc)
+            if self.news_last_fetch and (now - self.news_last_fetch).total_seconds() < 86400:
+                return
                 
-    #         async with self.session.get(url) as response:
-    #             if response.status == 200:
-    #                 events = await response.json()
+            # Append API key to URL
+            url = f"{TE_API_URL}?c={TE_API_KEY}"
+                
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    events = await response.json()
                     
-    #                 # Process all events
-    #                 if events:
-    #                     for event in events:
-    #                         await self._process_news_event(event)
-    #                 else:
-    #                     logger.info("No news events found in the latest fetch.")
+                    # Process all events
+                    if events:
+                        for event in events:
+                            await self._process_news_event(event)
+                    else:
+                        logger.info("No news events found in the latest fetch.")
                             
-    #                 self.news_last_fetch = now
-    #                 logger.info("Fetched and processed economic calendar events")
-    #             else:
-    #                 logger.error(f"Failed to fetch news events: HTTP {response.status}")
+                    self.news_last_fetch = now
+                    logger.info("Fetched and processed economic calendar events")
+                else:
+                    logger.error(f"Failed to fetch news events: HTTP {response.status}")
                     
-    #     except Exception as e:
-    #         logger.error(f"Error fetching news events: {str(e)}")
-    #         logger.error(traceback.format_exc())
+        except Exception as e:
+            logger.error(f"Error fetching news events: {str(e)}")
+            logger.error(traceback.format_exc())
     
-    # async def _process_news_event(self, event: Dict):
-    #     """Process a high-impact news event and save downtime windows"""
-    #     try:
-    #         # Parse event details
-    #         event_time = datetime.fromisoformat(event['Date'].replace('Z', '+00:00'))
-    #         country = event.get('Country', '')
-    #         event_name = event.get('Event', 'Unknown Event')
-    #         importance = event.get('Importance', 0)
+    async def _process_news_event(self, event: Dict):
+        """Process a high-impact news event and save downtime windows"""
+        try:
+            # Parse event details
+            event_time = datetime.fromisoformat(event['Date'].replace('Z', '+00:00'))
+            country = event.get('Country', '')
+            event_name = event.get('Event', 'Unknown Event')
+            importance = event.get('Importance', 0)
             
-    #         # Map country to currency
-    #         currency_map = {
-    #             'United States': 'USD',
-    #             'United Kingdom': 'GBP',
-    #             'Euro Area': 'EUR',
-    #             'Japan': 'JPY',
-    #             'Switzerland': 'CHF',
-    #             'Australia': 'AUD',
-    #             'New Zealand': 'NZD',
-    #             'Canada': 'CAD'
-    #         }
+            # Map country to currency
+            currency_map = {
+                'United States': 'USD',
+                'United Kingdom': 'GBP',
+                'Euro Area': 'EUR',
+                'Japan': 'JPY',
+                'Switzerland': 'CHF',
+                'Australia': 'AUD',
+                'New Zealand': 'NZD',
+                'Canada': 'CAD'
+            }
             
-    #         currency = currency_map.get(country)
-    #         if not currency:
-    #             return
+            currency = currency_map.get(country)
+            if not currency:
+                return
                 
-    #         # Calculate downtime window (1 hour before to 1 hour after)
-    #         start_time = event_time - timedelta(hours=1)
-    #         end_time = event_time + timedelta(hours=1)
+            # Calculate downtime window (1 hour before to 1 hour after)
+            start_time = event_time - timedelta(hours=1)
+            end_time = event_time + timedelta(hours=1)
             
-    #         # Save the event to the central news file
-    #         new_row = pd.DataFrame([{
-    #             'EventTime': event_time.strftime('%Y-%m-%d %H:%M:%S'),
-    #             'Country': country,
-    #             'Currency': currency,
-    #             'Event': event_name,
-    #             'Importance': importance,
-    #             'DowntimeStart': start_time.strftime('%Y-%m-%d %H:%M:%S'),
-    #             'DowntimeEnd': end_time.strftime('%Y-%m-%d %H:%M:%S')
-    #         }])
+            # Save the event to the central news file
+            new_row = pd.DataFrame([{
+                'EventTime': event_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'Country': country,
+                'Currency': currency,
+                'Event': event_name,
+                'Importance': importance,
+                'DowntimeStart': start_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'DowntimeEnd': end_time.strftime('%Y-%m-%d %H:%M:%S')
+            }])
 
-    #         try:
-    #             existing_df = pd.read_csv(NEWS_FILE)
-    #             # Check if this event (by time and name) already exists
-    #             if not ((pd.to_datetime(existing_df['EventTime']) == event_time) & (existing_df['Event'] == event_name)).any():
-    #                 combined_df = pd.concat([existing_df, new_row], ignore_index=True)
-    #                 combined_df.sort_values('EventTime', inplace=True)
-    #                 combined_df.to_csv(NEWS_FILE, index=False)
-    #                 logger.info(f"Logged new event (Importance: {importance}): {currency} - {event_name}")
-    #         except pd.errors.EmptyDataError:
-    #             new_row.to_csv(NEWS_FILE, index=False)
-    #             logger.info(f"Logged new event (Importance: {importance}): {currency} - {event_name}")
+            try:
+                existing_df = pd.read_csv(NEWS_FILE)
+                # Check if this event (by time and name) already exists
+                if not ((pd.to_datetime(existing_df['EventTime']) == event_time) & (existing_df['Event'] == event_name)).any():
+                    combined_df = pd.concat([existing_df, new_row], ignore_index=True)
+                    combined_df.sort_values('EventTime', inplace=True)
+                    combined_df.to_csv(NEWS_FILE, index=False)
+                    logger.info(f"Logged new event (Importance: {importance}): {currency} - {event_name}")
+            except pd.errors.EmptyDataError:
+                new_row.to_csv(NEWS_FILE, index=False)
+                logger.info(f"Logged new event (Importance: {importance}): {currency} - {event_name}")
 
-    #     except Exception as e:
-    #         logger.error(f"Error processing news event: {str(e)}")
-    #         logger.error(traceback.format_exc())
+        except Exception as e:
+            logger.error(f"Error processing news event: {str(e)}")
+            logger.error(traceback.format_exc())
     
     def _generate_symbols(self) -> Dict[str, str]:
         """Generate all required symbols with Yahoo Finance format"""
@@ -461,11 +461,11 @@ class OHLCVCollector:
     async def initial_load(self):
         """Perform initial data load for all symbols and timeframes"""
         logger.info("Starting initial data load...")
-        logger.info("Attempting to load data for %d symbols", len(self.symbols))
+        logger.info(f"Attempting to load data for {len(self.symbols)} symbols")
         
         tasks = []
         for symbol_key, symbol in self.symbols.items():
-            logger.info("Queuing %s -> %s", symbol_key, symbol)
+            logger.info(f"Queuing {symbol_key} -> {symbol}")
             for timeframe in TIMEFRAME_MAP.keys():
                 tasks.append(self._load_symbol_timeframe(symbol, symbol_key, timeframe))
         
@@ -604,97 +604,100 @@ class OHLCVCollector:
         logger.info(f"Updated {symbol_key} {timeframe} - {latest_bar['Datetime'].iloc[0]}")
     
     async def continuous_update_loop(self):
-        """Main loop to continuously update data"""
+        """Main update loop that runs continuously"""
         logger.info("Starting continuous update loop...")
         
-        # Fetch news events periodically
-        # await self._fetch_news_events()
-
+        # Track next update time for each timeframe
+        next_updates = {}
+        now = datetime.now(timezone.utc)
+        
+        for timeframe, config in TIMEFRAME_MAP.items():
+            # Calculate next update time based on timeframe
+            seconds = config["seconds"]
+            
+            if timeframe == "1m":
+                next_update = now.replace(second=0, microsecond=0) + timedelta(minutes=1)
+            elif timeframe == "5m":
+                minutes = (now.minute // 5 + 1) * 5
+                next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
+            elif timeframe == "15m":
+                minutes = (now.minute // 15 + 1) * 15
+                next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
+            elif timeframe == "1h":
+                next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+            elif timeframe == "4h":
+                hours = (now.hour // 4 + 1) * 4
+                next_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=hours)
+            elif timeframe == "1d":
+                next_update = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            elif timeframe == "1W":
+                days_until_monday = (7 - now.weekday()) % 7
+                if days_until_monday == 0:
+                    days_until_monday = 7
+                next_update = (now + timedelta(days=days_until_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+            elif timeframe == "1Mo":
+                if now.month == 12:
+                    next_update = now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+                else:
+                    next_update = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            else:  # 3M
+                month = ((now.month - 1) // 3 + 1) * 3 + 1
+                year = now.year
+                if month > 12:
+                    month = 1
+                    year += 1
+                next_update = now.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
+            
+            next_updates[timeframe] = next_update + timedelta(seconds=5)  # Add 5 seconds buffer
+        
         while self.running:
-            try:
-                now = datetime.now(timezone.utc)
-                logger.info("Checking for required updates at %s", now.strftime("%Y-%m-%d %H:%M:%S"))
-                update_tasks = []
-                
-                for timeframe, config in TIMEFRAME_MAP.items():
-                    status_key = f"{timeframe}_last_update"
-                    # Calculate next update time based on timeframe
-                    seconds = config["seconds"]
+            now = datetime.now(timezone.utc)
+            
+            # Fetch news events once per day
+            await self._fetch_news_events()
+            
+            # Check which timeframes need updating
+            tasks = []
+            for timeframe, next_update in next_updates.items():
+                if now >= next_update:
+                    # Update all symbols for this timeframe
+                    for symbol_key, symbol in self.symbols.items():
+                        tasks.append(self.update_symbol_timeframe(symbol, symbol_key, timeframe))
                     
-                    if timeframe == "1m":
-                        next_update = now.replace(second=0, microsecond=0) + timedelta(minutes=1)
-                    elif timeframe == "5m":
-                        minutes = (now.minute // 5 + 1) * 5
-                        next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
-                    elif timeframe == "15m":
-                        minutes = (now.minute // 15 + 1) * 15
-                        next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
-                    elif timeframe == "1h":
-                        next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-                    elif timeframe == "4h":
-                        hours = (now.hour // 4 + 1) * 4
-                        next_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=hours)
-                    elif timeframe == "1d":
-                        next_update = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-                    elif timeframe == "1W":
-                        days_until_monday = (7 - now.weekday()) % 7
-                        if days_until_monday == 0:
-                            days_until_monday = 7
-                        next_update = (now + timedelta(days=days_until_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
-                    elif timeframe == "1Mo":
-                        if now.month == 12:
-                            next_update = now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-                        else:
-                            next_update = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
-                    else:  # 3M
-                        month = ((now.month - 1) // 3 + 1) * 3 + 1
-                        year = now.year
-                        if month > 12:
-                            month = 1
-                            year += 1
-                        next_update = now.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
-                    
-                    if now >= next_update:
-                        # Update all symbols for this timeframe
-                        for symbol_key, symbol in self.symbols.items():
-                            update_tasks.append(self.update_symbol_timeframe(symbol, symbol_key, timeframe))
-                        
-                        # Calculate next update time
-                        config = TIMEFRAME_MAP[timeframe]
-                        next_update = next_update + timedelta(seconds=config["seconds"])
-                
-                if update_tasks:
-                    await asyncio.gather(*update_tasks)
-                    self._save_status()
-                
-                # Sleep for a short time before checking again
-                sleep_duration = 10
-                logger.info("Update check complete. Sleeping for %d seconds.", sleep_duration)
-                await asyncio.sleep(sleep_duration)
-            except Exception as e:
-                logger.error("An unexpected error occurred in the main loop: %s", str(e))
-                logger.error(traceback.format_exc())
-                logger.info("Restarting loop after 30 seconds...")
-                await asyncio.sleep(30)
-                
-        # Close the session when done
-        # if self.session:
-        logger.info("OHLCV Data Collector stopped")
-
+                    # Calculate next update time
+                    config = TIMEFRAME_MAP[timeframe]
+                    next_updates[timeframe] = next_update + timedelta(seconds=config["seconds"])
+            
+            if tasks:
+                await asyncio.gather(*tasks)
+                self._save_status()
+            
+            # Sleep for a short time before checking again
+            await asyncio.sleep(10)
+    
     async def run(self):
-        """Run the data collector"""
-        self.running = True
-        logger.info("OHLCV Data Collector starting...")
-        
-        # Perform initial data load
-        await self.initial_load()
-        
-        # Start continuous update loop
-        await self.continuous_update_loop()
-        
-    def stop(self):
-        self.running = False
-        logger.info("OHLCV Data Collector stopped")
+        """Main entry point"""
+        try:
+            logger.info("OHLCV Data Collector starting...")
+            self._ensure_directories()
+            
+            # Initial data load
+            await self.initial_load()
+            self._save_status()
+            
+            # Start continuous updates
+            await self.continuous_update_loop()
+            
+        except KeyboardInterrupt:
+            logger.info("Received interrupt signal, shutting down...")
+        except Exception as e:
+            logger.error(f"Fatal error: {str(e)}")
+            logger.error(traceback.format_exc())
+        finally:
+            self.running = False
+            if self.session:
+                await self.session.close()
+            logger.info("OHLCV Data Collector stopped")
 
 def signal_handler(signum, frame):
     """Handle shutdown signals"""

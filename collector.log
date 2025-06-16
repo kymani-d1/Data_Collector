@@ -1,0 +1,80 @@
+2025-06-16 14:29:53,705 - INFO - OHLCV Data Collector starting...
+2025-06-16 14:29:53,705 - INFO - Starting initial data load...
+2025-06-16 14:29:53,706 - INFO - Attempting to load data for 33 symbols
+2025-06-16 14:29:53,706 - INFO - Queuing eurusd -> EURUSD=X
+2025-06-16 14:29:53,706 - INFO - Queuing gbpusd -> GBPUSD=X
+2025-06-16 14:29:53,706 - INFO - Queuing usdjpy -> USDJPY=X
+2025-06-16 14:29:53,706 - INFO - Queuing usdchf -> USDCHF=X
+2025-06-16 14:29:53,706 - INFO - Queuing audusd -> AUDUSD=X
+2025-06-16 14:29:53,706 - INFO - Queuing usdcad -> USDCAD=X
+2025-06-16 14:29:53,706 - INFO - Queuing nzdusd -> NZDUSD=X
+2025-06-16 14:29:53,707 - INFO - Queuing eurgbp -> EURGBP=X
+2025-06-16 14:29:53,707 - INFO - Queuing eurjpy -> EURJPY=X
+2025-06-16 14:29:53,707 - INFO - Queuing gbpjpy -> GBPJPY=X
+2025-06-16 14:29:53,707 - INFO - Queuing chfjpy -> CHFJPY=X
+2025-06-16 14:29:53,708 - INFO - Queuing gbpchf -> GBPCHF=X
+2025-06-16 14:29:53,708 - INFO - Queuing euraud -> EURAUD=X
+2025-06-16 14:29:53,708 - INFO - Queuing eurcad -> EURCAD=X
+2025-06-16 14:29:53,708 - INFO - Queuing gbpaud -> GBPAUD=X
+2025-06-16 14:29:53,708 - INFO - Queuing gbpcad -> GBPCAD=X
+2025-06-16 14:29:53,708 - INFO - Queuing eurchf -> EURCHF=X
+2025-06-16 14:29:53,708 - INFO - Queuing audcad -> AUDCAD=X
+2025-06-16 14:29:53,708 - INFO - Queuing nzdcad -> NZDCAD=X
+2025-06-16 14:29:53,708 - INFO - Queuing audchf -> AUDCHF=X
+2025-06-16 14:29:53,708 - INFO - Queuing audjpy -> AUDJPY=X
+2025-06-16 14:29:53,708 - INFO - Queuing audnzd -> AUDNZD=X
+2025-06-16 14:29:53,708 - INFO - Queuing xauusd -> GC=F
+2025-06-16 14:29:53,708 - INFO - Queuing xagusd -> SI=F
+2025-06-16 14:29:53,709 - INFO - Queuing us100 -> NQ=F
+2025-06-16 14:29:53,709 - INFO - Queuing spy -> SPY
+2025-06-16 14:29:53,709 - INFO - Queuing xngusd -> NG=F
+2025-06-16 14:29:53,709 - INFO - Queuing oil -> CL=F
+2025-06-16 14:29:53,709 - INFO - Queuing copper -> HG=F
+2025-06-16 14:29:53,709 - INFO - Queuing btcusd -> BTC-USD
+2025-06-16 14:29:53,709 - INFO - Queuing ethusd -> ETH-USD
+2025-06-16 14:29:53,709 - INFO - Queuing dxy -> DX-Y.NYB
+2025-06-16 14:29:53,709 - INFO - Queuing vix -> ^VIX
+2025-06-16 14:29:57,633 - WARNING - Found 1 invalid OHLC bars for usdjpy 1d. Invalid data:
+              Datetime        Open        High         Low       Close  Volume
+0  2025-06-05 23:00:00  143.542007  145.074997  143.544998  143.542007       0
+2025-06-16 14:29:57,702 - WARNING - Found 1 invalid OHLC bars for usdjpy 1W. Invalid data:
+              Datetime        Open        High         Low       Close  Volume
+0  2025-06-01 23:00:00  143.542007  145.074997  143.544998  144.858994       0
+2025-06-16 14:30:00,616 - WARNING - Found 1 invalid OHLC bars for audusd 1d. Invalid data:
+              Datetime     Open     High       Low   Close  Volume
+5  2025-06-12 23:00:00  0.65275  0.65275  0.645999  0.6528       0
+2025-06-16 14:30:17,999 - WARNING - Found 1 invalid OHLC bars for gbpcad 1d. Invalid data:
+              Datetime     Open     High     Low    Close  Volume
+0  2025-06-05 23:00:00  1.85599  1.85594  1.8498  1.85599       0
+2025-06-16 14:30:18,076 - WARNING - Found 1 invalid OHLC bars for gbpcad 1W. Invalid data:
+              Datetime     Open     High     Low    Close  Volume
+0  2025-06-01 23:00:00  1.85599  1.85594  1.8498  1.84995       0
+2025-06-16 14:30:20,595 - WARNING - Found 1 invalid OHLC bars for audcad 1d. Invalid data:
+              Datetime    Open      High      Low   Close  Volume
+5  2025-06-12 23:00:00  0.8875  0.887333  0.88085  0.8875       0
+2025-06-16 14:30:24,108 - WARNING - Found 1 invalid OHLC bars for audchf 1d. Invalid data:
+              Datetime      Open      High     Low     Close  Volume
+4  2025-06-11 23:00:00  0.532838  0.532758  0.5277  0.532838       0
+2025-06-16 14:30:33,832 - WARNING - Found 1 invalid OHLC bars for spy 1d. Invalid data:
+              Datetime   Open        High        Low       Close   Volume
+6  2025-06-16 04:00:00  598.5  600.559998  600.22998  600.445007  2129659
+2025-06-16 14:30:34,008 - WARNING - Found 1 invalid OHLC bars for spy 1W. Invalid data:
+              Datetime   Open        High        Low       Close   Volume
+2  2025-06-16 04:00:00  598.5  600.559998  600.22998  600.445007  2129659
+2025-06-16 14:30:45,541 - INFO - Initial data load completed
+2025-06-16 14:30:45,542 - INFO - Starting continuous update loop...
+2025-06-16 14:30:45,542 - INFO - Checking for required updates at 2025-06-16 13:30:45
+2025-06-16 14:30:45,542 - INFO - Update check complete. Sleeping for 10 seconds.
+2025-06-16 14:30:55,554 - INFO - Checking for required updates at 2025-06-16 13:30:55
+2025-06-16 14:30:55,554 - INFO - Update check complete. Sleeping for 10 seconds.
+2025-06-16 14:31:05,556 - INFO - Checking for required updates at 2025-06-16 13:31:05
+2025-06-16 14:31:05,556 - INFO - Update check complete. Sleeping for 10 seconds.
+2025-06-16 14:31:15,568 - INFO - Checking for required updates at 2025-06-16 13:31:15
+2025-06-16 14:31:15,568 - INFO - Update check complete. Sleeping for 10 seconds.
+2025-06-16 14:31:25,574 - INFO - Checking for required updates at 2025-06-16 13:31:25
+2025-06-16 14:31:25,575 - INFO - Update check complete. Sleeping for 10 seconds.
+2025-06-16 14:31:35,582 - INFO - Checking for required updates at 2025-06-16 13:31:35
+2025-06-16 14:31:35,582 - INFO - Update check complete. Sleeping for 10 seconds.
+2025-06-16 14:31:45,583 - INFO - Checking for required updates at 2025-06-16 13:31:45
+2025-06-16 14:31:45,584 - INFO - Update check complete. Sleeping for 10 seconds.
+2025-06-16 14:31:46,318 - INFO - Received shutdown signal

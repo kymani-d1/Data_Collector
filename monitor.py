@@ -29,7 +29,7 @@ from tabulate import tabulate
 
 DATA_DIR = "ohlc_data"
 STATUS_FILE = "status.json"
-# NEWS_FILE = "news_events.csv"
+NEWS_FILE = "news_events.csv"
 
 def format_time_ago(timestamp_str):
     """Format timestamp as 'X minutes/hours/days ago'"""
@@ -73,31 +73,28 @@ def display_news_events():
     print("UPCOMING HIGH-IMPACT NEWS")
     print("=" * 80)
     
-    # This feature is temporarily disabled.
-    print("News tracking is currently disabled.")
-    
-    # if os.path.exists(NEWS_FILE):
-    #     try:
-    #         df = pd.read_csv(NEWS_FILE)
-    #         if not df.empty:
-    #             df['EventTime'] = pd.to_datetime(df['EventTime']).dt.tz_localize('UTC')
+    if os.path.exists(NEWS_FILE):
+        try:
+            df = pd.read_csv(NEWS_FILE)
+            if not df.empty:
+                df['EventTime'] = pd.to_datetime(df['EventTime']).dt.tz_localize('UTC')
                 
-    #             # Filter for events in the next 7 days
-    #             now = pd.Timestamp.now(tz='UTC')
-    #             future_events = df[df['EventTime'].between(now, now + timedelta(days=7))]
+                # Filter for events in the next 7 days
+                now = pd.Timestamp.now(tz='UTC')
+                future_events = df[df['EventTime'].between(now, now + timedelta(days=7))]
 
-    #             if not future_events.empty:
-    #                 print("\nUpcoming News Events (Next 7 Days):")
+                if not future_events.empty:
+                    print("\nUpcoming News Events (Next 7 Days):")
                     
-    #                 # Prepare data for tabulate
-    #                 table_data = future_events[['EventTime', 'Currency', 'Importance', 'Event']].copy()
-    #                 table_data['EventTime'] = table_data['EventTime'].dt.strftime('%Y-%m-%d %H:%M')
+                    # Prepare data for tabulate
+                    table_data = future_events[['EventTime', 'Currency', 'Importance', 'Event']].copy()
+                    table_data['EventTime'] = table_data['EventTime'].dt.strftime('%Y-%m-%d %H:%M')
                     
-    #                 print(tabulate(table_data, headers=['Time (UTC)', 'Currency', 'Importance', 'Event'], tablefmt="grid"))
-    #             else:
-    #                 print("\nNo upcoming news events in the next 7 days.")
-    #     except Exception as e:
-    #         print(f"\nCould not read news events file: {e}")
+                    print(tabulate(table_data, headers=['Time (UTC)', 'Currency', 'Importance', 'Event'], tablefmt="grid"))
+                else:
+                    print("\nNo upcoming news events in the next 7 days.")
+        except Exception as e:
+            print(f"\nCould not read news events file: {e}")
 
 def main():
     print("=" * 80)
