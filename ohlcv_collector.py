@@ -38,10 +38,10 @@ try:
     from config import TE_API_KEY as CUSTOM_TE_API_KEY
     TE_API_KEY = CUSTOM_TE_API_KEY
 except ImportError:
-    # If no config file, disable news fetching
-    TE_API_KEY = None
+    # Use default if no custom config
+    TE_API_KEY = "68951cae12474dd:0zn4h4vjkr9cs1h"
 
-TE_API_URL = "https://api.tradingeconomics.com/calendar"
+TE_API_URL = f"https://api.tradingeconomics.com/calendar?c={TE_API_KEY}"
 
 # Holiday calendars
 HOLIDAY_CALENDARS = {
@@ -106,13 +106,6 @@ class OHLCVCollector:
         self.session = None
         self._ensure_news_file()
         
-        if not TE_API_KEY or TE_API_KEY == "your_api_key_here":
-            logger.warning("Trading Economics API key not configured. News fetching will be disabled.")
-            logger.warning("Get a free key from https://developer.tradingeconomics.com for full news coverage.")
-            self.news_enabled = False
-        else:
-            self.news_enabled = True
-        
     def _ensure_news_file(self):
         """Ensure the news events file exists with correct headers"""
         if not os.path.exists(NEWS_FILE):
@@ -158,9 +151,6 @@ class OHLCVCollector:
     
     async def _fetch_news_events(self):
         """Fetch high-impact economic events from TradingEconomics"""
-        if not self.news_enabled:
-            return # Do not fetch news if not enabled
-            
         try:
             if self.session is None:
                 self.session = aiohttp.ClientSession()
@@ -170,10 +160,7 @@ class OHLCVCollector:
             if self.news_last_fetch and (now - self.news_last_fetch).total_seconds() < 86400:
                 return
                 
-            # Append API key to URL
-            url = f"{TE_API_URL}?c={TE_API_KEY}"
-                
-            async with self.session.get(url) as response:
+            async with self.session.get(TE_API_URL) as response:
                 if response.status == 200:
                     events = await response.json()
                     

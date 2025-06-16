@@ -1,7 +1,5 @@
 """
 Configuration for OHLCV Data Collector
-
-Store sensitive information and configurable parameters here.
 """
 
 # Email Configuration for alert_check.py
@@ -15,14 +13,7 @@ EMAIL_CONFIG = {
 
 STALE_THRESHOLD_DAYS = 7
 
-# Trading Economics API Key
-# -------------------------
-# Get your free API key from https://developer.tradingeconomics.com/
-#
-# The default guest key provides a limited sample of data. For comprehensive
-# news coverage (USD, EUR, GBP, etc.), you need to register for a key.
-#
-# Example: TE_API_KEY = "your_api_key_here"
-TE_API_KEY = "your_api_key_here"
+TE_API_KEY = "68951cae12474dd:0zn4h4vjkr9cs1h"
+
 
 # Email Password: DataCollector1234321!!
