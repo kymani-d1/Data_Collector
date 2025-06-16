@@ -5,6 +5,7 @@ Defines market hours, weekend breaks, and daily maintenance periods
 
 import pytz
 from datetime import datetime, timedelta, timezone
+from utils import get_symbol_currencies, is_crypto_symbol
 
 # Map timeframe strings to their duration in minutes
 TF_TO_MINUTES = {
@@ -23,20 +24,6 @@ def tf_minutes(timeframe: str) -> int:
     """Convert timeframe string to minutes, default to huge number for unknown timeframes"""
     return TF_TO_MINUTES.get(timeframe, 10**9)  # default huge so you skip breaks
 
-def get_symbol_currencies(symbol: str):
-    """Extract currencies from a symbol"""
-    currencies = set()
-    
-    # Forex pairs
-    if len(symbol) == 6 and symbol.isalpha():
-        currencies.add(symbol[:3].upper())
-        currencies.add(symbol[3:].upper())
-    # USD-based assets
-    elif symbol in ['gold', 'silver', 'natgas', 'spy', 'nasdaq', 'sp500', 'oil', 'copper', 'btc', 'eth']:
-        currencies.add('USD')
-        
-    return currencies
-
 def closed_window(sym: str, start: datetime, end: datetime, timeframe: str = None) -> bool:
     """Check if a time window overlaps a scheduled market closure.
        FX -> 24×5 Fri 22:00–Sun 22:00 UTC; Crypto -> always open; else use SESSIONS."""
@@ -49,7 +36,7 @@ def closed_window(sym: str, start: datetime, end: datetime, timeframe: str = Non
     # identify FX vs crypto vs others
     currencies = get_symbol_currencies(sym)
     is_fx = len(currencies) == 2
-    is_crypto = sym.lower() in {'btc', 'eth'}
+    is_crypto = is_crypto_symbol(sym)
 
     # 1) explicit sessions config (cash/futures)
     # map directory name to Yahoo symbol for lookup
@@ -57,14 +44,17 @@ def closed_window(sym: str, start: datetime, end: datetime, timeframe: str = Non
         # Forex pairs
         'eurusd': 'EURUSD=X', 'gbpusd': 'GBPUSD=X',
         'usdjpy': 'USDJPY=X', 'usdchf': 'USDCHF=X',
-        'audusd': 'AUDUSD=X', 'eurgbp': 'EURGBP=X',
+        'audusd': 'AUDUSD=X', 'usdcad': 'USDCAD=X',
+        'nzdusd': 'NZDUSD=X', 'eurgbp': 'EURGBP=X',
         'eurjpy': 'EURJPY=X', 'gbpjpy': 'GBPJPY=X',
-        'eurchf': 'EURCHF=X',
+        'eurchf': 'EURCHF=X', 'audjpy': 'AUDJPY=X',
         # Metals & energies
         'gold': 'GC=F', 'silver': 'SI=F', 'oil': 'CL=F',
         'natgas': 'NG=F', 'copper': 'HG=F',
         # Index futures & ETF
-        'sp500': 'ES=F', 'nasdaq': 'NQ=F', 'spy': 'SPY'
+        'sp500': 'ES=F', 'nasdaq': 'NQ=F', 'spy': 'SPY',
+        # Indices
+        'dxy': 'DX-Y.NYB', 'vix': '^VIX'
     }
     yahoo = symbol_map.get(sym.lower())
     cfg = SESSIONS.get(yahoo) if yahoo else None
@@ -102,9 +92,15 @@ def closed_window(sym: str, start: datetime, end: datetime, timeframe: str = Non
             eh, em = map(int, t1.split(':'))
             # compute break interval in local tz
             db_start = local_start.replace(hour=bh, minute=bm, second=0, microsecond=0)
-            db_end   = local_start.replace(hour=eh, minute=em, second=0, microsecond=0)
-            # compute break duration (in minutes), wrap around midnight if needed
-            raw_minutes = ((eh * 60 + em) - (bh * 60 + bm)) % (24 * 60)
+            db_end = local_start.replace(hour=eh, minute=em, second=0, microsecond=0)
+            
+            # Handle midnight crossover
+            if eh < bh or (eh == bh and em < bm):  # Break crosses midnight
+                db_end = db_end + timedelta(days=1)
+            
+            # compute break duration (in minutes)
+            raw_minutes = int((db_end - db_start).total_seconds() / 60)
+            
             # if user passed a timeframe, skip maintenance-break logic only when the bar length
             # is _longer_ than the break itself
             if timeframe is not None:
@@ -133,110 +129,3 @@ def closed_window(sym: str, start: datetime, end: datetime, timeframe: str = Non
 
     # 3) crypto or anything else: always open
     return False
-
-SESSIONS = {
-    # ---------- FX pairs (24h Mon–Fri, but Yahoo has a daily maintenance window) ----------
-    "EURUSD=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "GBPUSD=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "USDJPY=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "USDCHF=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "AUDUSD=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "EURGBP=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "EURJPY=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "GBPJPY=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-    "EURCHF=X": {
-        "timezone": "UTC",
-        "weekend": ("Fri 22:00", "Sun 22:00"),
-        "daily_breaks": [("05:00", "06:00")],
-    },
-
-    # ---------- CME Globex metals & energies ----------
-    "GC=F": {          # Gold
-        "timezone": "UTC",
-        "weekend": ("Fri 21:00", "Sun 21:00"),
-        "daily_breaks": [("21:00", "22:00")],
-    },
-    "CL=F": {          # Crude Oil
-        "timezone": "UTC",
-        "weekend": ("Fri 21:00", "Sun 21:00"),
-        "daily_breaks": [("21:00", "22:00")],
-    },
-    "SI=F": {          # Silver
-        "timezone": "UTC",
-        "weekend": ("Fri 21:00", "Sun 21:00"),
-        "daily_breaks": [("21:00", "22:00")],
-    },
-    "HG=F": {          # Copper
-        "timezone": "UTC",
-        "weekend": ("Fri 21:00", "Sun 21:00"),
-        "daily_breaks": [("21:00", "22:00")],
-    },
-    "NG=F": {          # Natural Gas
-        "timezone": "UTC",
-        "weekend": ("Fri 21:00", "Sun 21:00"),
-        "daily_breaks": [("21:00", "22:00")],
-    },
-
-    # ---------- Index futures ----------
-    "ES=F": {          # S&P 500 Futures
-        "timezone": "UTC",
-        "weekend": ("Fri 21:00", "Sun 21:00"),
-        "daily_breaks": [("21:00", "22:00")],
-    },
-    "NQ=F": {          # Nasdaq Futures
-        "timezone": "UTC",
-        "weekend": ("Fri 21:00", "Sun 21:00"),
-        "daily_breaks": [("21:00", "22:00")],
-    },
-
-    # ---------- Cash equities / ETFs ----------
-    "SPY": {           # S&P 500 ETF
-        "timezone": "UTC",
-        "weekend": ("Fri 20:00", "Sun 20:00"),
-        # Market open 13:30–20:00 UTC
-        "daily_breaks": [
-            ("00:00", "13:30"),
-            ("20:00", "23:59"),
-        ],
-    },
-    
-    # ---------- Crypto ----------
-    "BTC-USD": {
-        "timezone": "UTC",
-    },
-    "ETH-USD": {
-        "timezone": "UTC",
-    },
-} 

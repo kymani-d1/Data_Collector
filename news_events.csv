@@ -1,0 +1,8 @@
+EventTime,Country,Currency,Event,DowntimeStart,DowntimeEnd,Importance
+2025-06-16 22:45:00,New Zealand,NZD,Food Inflation YoY,2025-06-16 21:45:00,2025-06-16 23:45:00,1.0
+2025-06-17 02:35:00,New Zealand,NZD,1-Year Bill Auction,2025-06-17 01:35:00,2025-06-17 03:35:00,1.0
+2025-06-17 02:35:00,New Zealand,NZD,6-Month Bill Auction,2025-06-17 01:35:00,2025-06-17 03:35:00,1.0
+2025-06-17 02:35:00,New Zealand,NZD,3-Month Bill Auction,2025-06-17 01:35:00,2025-06-17 03:35:00,1.0
+2025-06-17 12:00:00,New Zealand,NZD,Global Dairy Trade Price Index,2025-06-17 11:00:00,2025-06-17 13:00:00,1.0
+2025-06-17 21:00:00,New Zealand,NZD,Westpac Consumer Confidence,2025-06-17 20:00:00,2025-06-17 22:00:00,1.0
+2025-06-17 22:45:00,New Zealand,NZD,Current Account,2025-06-17 21:45:00,2025-06-17 23:45:00,2.0

@@ -33,11 +33,11 @@ def reset_collector(keep_data=True):
         # Just clean up invalid directories
         if os.path.exists("ohlc_data"):
             valid_symbols = {
-                'eurusd', 'gbpusd', 'usdjpy', 'usdchf', 'audusd',
-                'eurgbp', 'eurjpy', 'gbpjpy', 'eurchf',
-                'gold', 'silver', 'oil', 'natgas', 'copper',
-                'spy', 'nasdaq', 'sp500',
-                'btc', 'eth'
+                'eurusd', 'gbpusd', 'usdjpy', 'usdchf', 'audusd', 'usdcad', 'nzdusd',
+                'eurgbp', 'eurjpy', 'gbpjpy', 'chfjpy', 'gbpchf', 'euraud', 'eurcad',
+                'gbpaud', 'gbpcad', 'eurchf', 'audcad', 'nzdcad', 'audchf', 'audjpy',
+                'audnzd', 'xauusd', 'xagusd', 'us100', 'spy', 'xngusd', 'oil', 'copper',
+                'btcusd', 'ethusd'
             }
             
             removed = 0

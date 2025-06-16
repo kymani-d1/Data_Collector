@@ -26,5 +26,6 @@ EMAIL_CONFIG = {
 # Optional: Override stale threshold (default is 7 days)
 STALE_THRESHOLD_DAYS = 7
 
-#Enter your Trading Economics API key here
-TE_API_KEY = "TRADINGECONOMICS_API_KEY"
+# Optional: Override TradingEconomics API key
+# (Default key is provided, but you can use your own)
+TE_API_KEY = "68951cae12474dd:0zn4h4vjkr9cs1h"
