@@ -605,67 +605,82 @@ class OHLCVCollector:
     
     async def continuous_update_loop(self):
         """Main loop to continuously update data"""
+        logger.info("Starting continuous update loop...")
         
         # Fetch news events periodically
         # await self._fetch_news_events()
 
         while self.running:
-            now = datetime.now(timezone.utc)
-            update_tasks = []
-            for timeframe, config in TIMEFRAME_MAP.items():
-                # Calculate next update time based on timeframe
-                seconds = config["seconds"]
+            try:
+                now = datetime.now(timezone.utc)
+                logger.info("Checking for required updates at %s", now.strftime("%Y-%m-%d %H:%M:%S"))
+                update_tasks = []
                 
-                if timeframe == "1m":
-                    next_update = now.replace(second=0, microsecond=0) + timedelta(minutes=1)
-                elif timeframe == "5m":
-                    minutes = (now.minute // 5 + 1) * 5
-                    next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
-                elif timeframe == "15m":
-                    minutes = (now.minute // 15 + 1) * 15
-                    next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
-                elif timeframe == "1h":
-                    next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-                elif timeframe == "4h":
-                    hours = (now.hour // 4 + 1) * 4
-                    next_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=hours)
-                elif timeframe == "1d":
-                    next_update = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-                elif timeframe == "1W":
-                    days_until_monday = (7 - now.weekday()) % 7
-                    if days_until_monday == 0:
-                        days_until_monday = 7
-                    next_update = (now + timedelta(days=days_until_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
-                elif timeframe == "1Mo":
-                    if now.month == 12:
-                        next_update = now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-                    else:
-                        next_update = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
-                else:  # 3M
-                    month = ((now.month - 1) // 3 + 1) * 3 + 1
-                    year = now.year
-                    if month > 12:
-                        month = 1
-                        year += 1
-                    next_update = now.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
-                
-                if now >= next_update:
-                    # Update all symbols for this timeframe
-                    for symbol_key, symbol in self.symbols.items():
-                        update_tasks.append(self.update_symbol_timeframe(symbol, symbol_key, timeframe))
+                for timeframe, config in TIMEFRAME_MAP.items():
+                    status_key = f"{timeframe}_last_update"
+                    # Calculate next update time based on timeframe
+                    seconds = config["seconds"]
                     
-                    # Calculate next update time
-                    config = TIMEFRAME_MAP[timeframe]
-                    next_update = next_update + timedelta(seconds=config["seconds"])
-            
-            if update_tasks:
-                await asyncio.gather(*update_tasks)
-                self._save_status()
-            
-            # Sleep for a short time before checking again
-            sleep_duration = 10
-            await asyncio.sleep(sleep_duration)
-    
+                    if timeframe == "1m":
+                        next_update = now.replace(second=0, microsecond=0) + timedelta(minutes=1)
+                    elif timeframe == "5m":
+                        minutes = (now.minute // 5 + 1) * 5
+                        next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
+                    elif timeframe == "15m":
+                        minutes = (now.minute // 15 + 1) * 15
+                        next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
+                    elif timeframe == "1h":
+                        next_update = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+                    elif timeframe == "4h":
+                        hours = (now.hour // 4 + 1) * 4
+                        next_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=hours)
+                    elif timeframe == "1d":
+                        next_update = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                    elif timeframe == "1W":
+                        days_until_monday = (7 - now.weekday()) % 7
+                        if days_until_monday == 0:
+                            days_until_monday = 7
+                        next_update = (now + timedelta(days=days_until_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+                    elif timeframe == "1Mo":
+                        if now.month == 12:
+                            next_update = now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+                        else:
+                            next_update = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
+                    else:  # 3M
+                        month = ((now.month - 1) // 3 + 1) * 3 + 1
+                        year = now.year
+                        if month > 12:
+                            month = 1
+                            year += 1
+                        next_update = now.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
+                    
+                    if now >= next_update:
+                        # Update all symbols for this timeframe
+                        for symbol_key, symbol in self.symbols.items():
+                            update_tasks.append(self.update_symbol_timeframe(symbol, symbol_key, timeframe))
+                        
+                        # Calculate next update time
+                        config = TIMEFRAME_MAP[timeframe]
+                        next_update = next_update + timedelta(seconds=config["seconds"])
+                
+                if update_tasks:
+                    await asyncio.gather(*update_tasks)
+                    self._save_status()
+                
+                # Sleep for a short time before checking again
+                sleep_duration = 10
+                logger.info("Update check complete. Sleeping for %d seconds.", sleep_duration)
+                await asyncio.sleep(sleep_duration)
+            except Exception as e:
+                logger.error("An unexpected error occurred in the main loop: %s", str(e))
+                logger.error(traceback.format_exc())
+                logger.info("Restarting loop after 30 seconds...")
+                await asyncio.sleep(30)
+                
+        # Close the session when done
+        # if self.session:
+        logger.info("OHLCV Data Collector stopped")
+
     async def run(self):
         """Run the data collector"""
         self.running = True
@@ -679,8 +694,6 @@ class OHLCVCollector:
         
     def stop(self):
         self.running = False
-        # if self.session:
-        #     await self.session.close()
         logger.info("OHLCV Data Collector stopped")
 
 def signal_handler(signum, frame):
